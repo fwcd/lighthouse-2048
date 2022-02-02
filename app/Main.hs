@@ -2,7 +2,7 @@
 module Main where
 
 import Control.Monad (guard, void, join)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT (..), runMaybeT)
 import Data.Maybe (fromMaybe, isNothing)
@@ -38,6 +38,10 @@ boardWidth = 4
 boardHeight :: Int
 boardHeight = 4
 
+-- | The empty board.
+emptyBoard :: Board
+emptyBoard = Board $ replicate boardHeight (replicate boardWidth Nothing)
+
 -- | Checks whether the given position is in bounds.
 inBounds :: Pos -> Bool
 inBounds (Pos x y) = x >= 0 && x < boardWidth && y >= 0 && y < boardHeight
@@ -52,7 +56,7 @@ emptyPositions b = filter (isNothing . flip tileAt b) positions
 
 -- | Fetches the tile at the given position.
 tileAt :: Pos -> Board -> Maybe Tile
-tileAt pos@(Pos x y) (Board rs) | inBounds pos = ((rs !! y) !! x)
+tileAt pos@(Pos x y) (Board rs) | inBounds pos = (rs !! y) !! x
                                 | otherwise    = Nothing
 
 -- | Generates a board from a function that maps positions to tiles.
@@ -104,21 +108,21 @@ shiftAndMerge dir = case dir of
           Nothing : ts'                    -> updateRow (Nothing : acc) ts'
 
 -- | Randomly chooses a value from the given list (assuming it is non-empty).
-chooseRandom :: [a] -> IO a
+chooseRandom :: MonadIO m => [a] -> m a
 chooseRandom [] = error "Cannot choose random from empty list!"
 chooseRandom xs = do
   i <- uniformRM (0, length xs - 1) globalStdGen
   return $ xs !! i
 
 -- | Spawns a new tile at a random position.
-spawnTile :: Board -> IO Board
+spawnTile :: MonadIO m => Board -> m Board
 spawnTile b = do
   t <- chooseRandom (Tile 4 : replicate 3 (Tile 2))
   p <- chooseRandom (emptyPositions b)
   return $ putTileAt p (Just t) b
 
 -- | Performs a game step in the given direction.
-step :: Dir -> Board -> IO Board
+step :: MonadIO m => Dir -> Board -> m Board
 step dir = spawnTile . shiftAndMerge dir
 
 -- | Maps a tile to a color for the lighthouse.
@@ -130,16 +134,6 @@ tileColor (Tile 16) = Color 189 88 0    -- darker orange
 tileColor (Tile 32) = Color 255 88 66   -- light red
 tileColor (Tile 64) = Color 171 20 0    -- dark red
 tileColor (Tile _)  = yellow
-
--- | An example board for testing.
-sampleBoard :: Board
-sampleBoard = Board
-  [ [Nothing, Nothing, Nothing, Just (Tile 2)]
-  , [Just (Tile 2), Just (Tile 4), Nothing, Just (Tile 2)]
-  , [Nothing, Just (Tile 8), Just (Tile 16), Just (Tile 16)]
-  , [Nothing, Nothing, Nothing, Just (Tile 2)]
-  , [Nothing, Nothing, Nothing, Just (Tile 64)]
-  ]
 
 -- | Converts a game board to a lighthouse-sized display.
 boardToDisplay :: Board -> Display
@@ -153,8 +147,10 @@ app = mempty
       logInfo "app" "Connected!"
 
       -- Send initial board
-      board <- getUserState
-      sendDisplay $ boardToDisplay board
+      b  <- getUserState
+      b' <- spawnTile b
+      putUserState b'
+      sendDisplay $ boardToDisplay b'
 
       -- Request input events
       requestStream
@@ -174,7 +170,7 @@ app = mempty
       -- Update board and send it
       lift $ do
         b  <- getUserState
-        b' <- liftIO $ step dir b
+        b' <- step dir b
         putUserState b'
         sendDisplay $ boardToDisplay b'
   }
@@ -186,7 +182,7 @@ main = do
   token    <- T.pack <$> getEnv "LIGHTHOUSE_TOKEN"
   let opts  = Options { optAuthentication = Authentication { authUsername = username, authToken = token }
                       , optLogHandler = simpleLogHandler infoLevel
-                      , optInitialState = sampleBoard
+                      , optInitialState = emptyBoard
                       }
 
   runLighthouseApp app opts
