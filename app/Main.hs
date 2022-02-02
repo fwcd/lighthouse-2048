@@ -1,11 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Control.Monad (when)
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import Lighthouse.Connection
 import Lighthouse.Display
 import Lighthouse.Options
+import Lighthouse.Protocol (InputEvent (..), Input (..))
 import Lighthouse.Utils.Color
 import Lighthouse.Utils.Logging
 import System.Environment (getEnv)
@@ -48,11 +50,35 @@ boardToDisplay :: Board -> Display
 boardToDisplay b = generateDisplay pixAt
   where pixAt x y = maybe black pieceColor $ pieceAt ((x - 4) `div` 5) ((y - 1) `div` 3) b
 
-app :: Listener ()
+app :: Listener Board
 app = mempty
   { onConnect = do
       logInfo "app" "Connected!"
-      sendDisplay $ boardToDisplay sampleBoard
+
+      -- Send initial board
+      board <- getUserState
+      sendDisplay $ boardToDisplay board
+
+      -- Request input events
+      requestStream
+
+  , onInput = \e -> do
+      -- Handle key down events
+      when (keIsDown e) $ do
+        case keInput e of
+          KeyInput 37 -> do
+            logInfo "app" "Pressed left"
+          KeyInput 38 -> do
+            logInfo "app" "Pressed up"
+          KeyInput 39 -> do
+            logInfo "app" "Pressed right"
+          KeyInput 40 -> do
+            logInfo "app" "Pressed down"
+          _           -> return ()
+
+        -- Update board
+        board <- getUserState
+        sendDisplay $ boardToDisplay board
   }
 
 main :: IO ()
@@ -61,7 +87,7 @@ main = do
   token    <- T.pack <$> getEnv "LIGHTHOUSE_TOKEN"
   let opts  = Options { optAuthentication = Authentication { authUsername = username, authToken = token }
                       , optLogHandler = simpleLogHandler infoLevel
-                      , optInitialState = ()
+                      , optInitialState = sampleBoard
                       }
 
   runLighthouseApp app opts
