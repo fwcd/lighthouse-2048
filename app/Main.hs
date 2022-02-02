@@ -153,6 +153,16 @@ boardToDisplay :: Board -> Display
 boardToDisplay b = generateDisplay pixAt
   where pixAt x y = maybe black tileColor $ tileAt (Pos ((x - 4) `div` 5) ((y - 1) `div` 3)) b
 
+-- | Updates the board using the given function within the lighthouse monad.
+updateBoard :: (Board -> LighthouseIO Board (Maybe Board)) -> LighthouseIO Board ()
+updateBoard f = void $ runMaybeT $ do
+  b <- lift getUserState
+  b' <- MaybeT $ f b
+  lift $ do
+    logInfo "updateBoard" $ prettyBoard b'
+    putUserState b'
+    sendDisplay $ boardToDisplay b'
+
 -- | The lighthouse application, i.e. our game.
 app :: Listener Board
 app = mempty
@@ -160,10 +170,7 @@ app = mempty
       logInfo "app" "Connected!"
 
       -- Send initial board
-      b  <- getUserState
-      b' <- spawnTile b
-      putUserState b'
-      sendDisplay $ boardToDisplay b'
+      updateBoard ((Just <$>) . spawnTile)
 
       -- Request input events
       requestStream
@@ -181,11 +188,7 @@ app = mempty
         _           -> Nothing
 
       -- Update board and send it
-      b  <- lift getUserState
-      b' <- MaybeT $ step dir b
-      lift $ do
-        putUserState b'
-        sendDisplay $ boardToDisplay b'
+      lift $ updateBoard $ step dir
   }
 
 -- | The main function.
