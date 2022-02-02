@@ -14,6 +14,7 @@ import Lighthouse.Protocol (InputEvent (..), Input (..))
 import Lighthouse.Utils.Color
 import Lighthouse.Utils.Logging
 import System.Environment (getEnv)
+import System.Random.Stateful (uniformRM, globalStdGen)
 
 -- TODO: Use Data.Vector for efficient random access?
 
@@ -40,6 +41,14 @@ boardHeight = 4
 -- | Checks whether the given position is in bounds.
 inBounds :: Pos -> Bool
 inBounds (Pos x y) = x >= 0 && x < boardWidth && y >= 0 && y < boardHeight
+
+-- | All valid positions.
+positions :: [Pos]
+positions = [Pos x y | y <- [0..(boardHeight - 1)], x <- [0..(boardWidth - 1)]]
+
+-- | Fetches the empty positions on the board.
+emptyPositions :: Board -> [Pos]
+emptyPositions b = filter (isNothing . flip tileAt b) positions
 
 -- | Fetches the tile at the given position.
 tileAt :: Pos -> Board -> Maybe Tile
@@ -94,16 +103,23 @@ shiftAndMerge dir = case dir of
           Just t : ts'                     -> Just t : updateRow acc ts'
           Nothing : ts'                    -> updateRow (Nothing : acc) ts'
 
--- -- | Spawns a new tile at a random position.
--- spawnTile :: Board -> IO Board
--- spawnTile = 
+-- | Randomly chooses a value from the given list (assuming it is non-empty).
+chooseRandom :: [a] -> IO a
+chooseRandom [] = error "Cannot choose random from empty list!"
+chooseRandom xs = do
+  i <- uniformRM (0, length xs - 1) globalStdGen
+  return $ xs !! i
+
+-- | Spawns a new tile at a random position.
+spawnTile :: Board -> IO Board
+spawnTile b = do
+  t <- chooseRandom (Tile 4 : replicate 3 (Tile 2))
+  p <- chooseRandom (emptyPositions b)
+  return $ putTileAt p (Just t) b
 
 -- | Performs a game step in the given direction.
 step :: Dir -> Board -> IO Board
-step dir b = do
-  -- TODO: Spawn tile
-  let b' = shiftAndMerge dir b
-  return b
+step dir = spawnTile . shiftAndMerge dir
 
 -- | Maps a tile to a color for the lighthouse.
 tileColor :: Tile -> Color

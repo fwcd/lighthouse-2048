@@ -8,4 +8,5 @@ extra-deps:
   commit: d418d63e1325c546661fc6f09dc5c08ad6d62cf0
   subdirs:
   - lighthouse-client
+- random-1.2.1
 - msgpack-1.0.1.0
