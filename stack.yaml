@@ -1,0 +1,8 @@
+resolver: lts-18.23
+
+packages:
+- .
+
+extra-deps:
+- git: https://github.com/fwcd/lighthouse-haskell.git
+  commit: 16dd0a8529e3d97fee795c79f0b80fea9c48154a
