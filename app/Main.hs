@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Monad (when)
+import Control.Monad (guard, void)
+import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Maybe (MaybeT (..), runMaybeT)
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import Lighthouse.Connection
@@ -16,23 +18,40 @@ import System.Environment (getEnv)
 
 newtype Piece = Piece Int
 newtype Board = Board [[Maybe Piece]]
+data Dir = DirLeft | DirRight | DirUp | DirDown
 
+-- | The (constant) board width.
 boardWidth :: Int
 boardWidth = 4
 
+-- | The (constant) board height.
 boardHeight :: Int
 boardHeight = 4
 
+-- | Fetches the piece at the given position.
 pieceAt :: Int -> Int -> Board -> Maybe Piece
-pieceAt x y (Board b)
-  | x >= 0 && x < boardWidth && y >= 0 && y < boardHeight = ((b !! y) !! x)
+pieceAt x y (Board rs)
+  | x >= 0 && x < boardWidth && y >= 0 && y < boardHeight = ((rs !! y) !! x)
   | otherwise                                             = Nothing
 
+-- | Generates a board from a function that maps positions to pieces.
 generateBoard :: (Int -> Int -> Maybe Piece) -> Board
 generateBoard gen = Board $ (\y -> (\x -> gen x y) <$> [0..(boardWidth - 1)]) <$> [0..(boardHeight - 1)]
 
-transpose :: Board -> Board
-transpose b = generateBoard $ \x y -> pieceAt y x b
+-- | Transposes the board.
+transposeBoard :: Board -> Board
+transposeBoard b = generateBoard $ \x y -> pieceAt y x b
+
+-- | Flips the board vertically.
+flipBoard :: Board -> Board
+flipBoard (Board rs) = Board $ reverse rs
+
+step :: Dir -> Board -> Board
+step dir (Board rs) = Board $ updateRow [] <$> rs
+  -- TODO: Merge tiles
+  where updateRow acc []            = acc
+        updateRow acc (Nothing : ps) = updateRow (Nothing : acc) ps
+        updateRow acc (Just p : ps)  = Just p : updateRow acc ps
 
 pieceColor :: Piece -> Color
 pieceColor (Piece 2)  = white
@@ -68,21 +87,21 @@ app = mempty
       -- Request input events
       requestStream
 
-  , onInput = \e -> do
-      -- Handle key down events
-      when (keIsDown e) $ do
-        case keInput e of
-          KeyInput 37 -> do
-            logInfo "app" "Pressed left"
-          KeyInput 38 -> do
-            logInfo "app" "Pressed up"
-          KeyInput 39 -> do
-            logInfo "app" "Pressed right"
-          KeyInput 40 -> do
-            logInfo "app" "Pressed down"
-          _           -> return ()
+  , onInput = \e -> void . runMaybeT $ do
+      -- Handle only key down events
+      guard (keIsDown e)
 
-        -- Update board
+      -- Convert key input to direction
+      dir <- MaybeT . return $ case keInput e of
+        KeyInput 37 -> Just DirLeft
+        KeyInput 38 -> Just DirUp
+        KeyInput 39 -> Just DirRight
+        KeyInput 40 -> Just DirDown
+        _           -> Nothing
+
+      -- Update board and send it
+      lift $ do
+        modifyUserState (step dir)
         board <- getUserState
         sendDisplay $ boardToDisplay board
   }
