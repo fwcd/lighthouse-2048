@@ -38,18 +38,38 @@ tileAt x y (Board rs)
 generateBoard :: (Int -> Int -> Maybe Tile) -> Board
 generateBoard gen = Board $ (\y -> (\x -> gen x y) <$> [0..(boardWidth - 1)]) <$> [0..(boardHeight - 1)]
 
+-- TODO: Add optimization rule transpose . transpose = id?
+
 -- | Transposes the board.
-transposeBoard :: Board -> Board
-transposeBoard b = generateBoard $ \x y -> tileAt y x b
+transpose :: Board -> Board
+transpose b = generateBoard $ \x y -> tileAt y x b
 
 -- | Flips the board vertically.
-flipBoard :: Board -> Board
-flipBoard (Board rs) = Board $ reverse rs
+flipV :: Board -> Board
+flipV (Board rs) = Board $ reverse rs
+
+-- | Flips the board horizontally.
+flipH :: Board -> Board
+flipH = transpose . flipV . transpose
+
+-- | Rotates the board left by 90 degrees.
+rotL :: Board -> Board
+rotL = flipV . transpose
+
+-- | Rotates the board right by 90 degrees.
+rotR :: Board -> Board
+rotR = flipH . transpose
 
 step :: Dir -> Board -> Board
-step dir (Board rs) = Board $ updateRow [] <$> rs
+step dir = case dir of
+    DirLeft  -> stepLeft
+    DirRight -> stepRight
+    DirUp    -> rotR . stepLeft . rotL
+    DirDown  -> rotR . stepRight . rotL
   -- TODO: Merge tiles
-  where updateRow acc []            = acc
+  where stepLeft (Board rs) = Board $ updateRow [] <$> rs
+        stepRight           = flipH . stepLeft . flipH
+        updateRow acc []             = acc
         updateRow acc (Nothing : ps) = updateRow (Nothing : acc) ps
         updateRow acc (Just p : ps)  = Just p : updateRow acc ps
 
