@@ -15,7 +15,7 @@ import System.Environment (getEnv)
 -- TODO: Use Data.Vector for efficient random access?
 
 newtype Piece = Piece Int
-data Board = Board [[Maybe Piece]]
+newtype Board = Board [[Maybe Piece]]
 
 boardWidth :: Int
 boardWidth = 4
@@ -27,6 +27,12 @@ pieceAt :: Int -> Int -> Board -> Maybe Piece
 pieceAt x y (Board b)
   | x >= 0 && x < boardWidth && y >= 0 && y < boardHeight = ((b !! y) !! x)
   | otherwise                                             = Nothing
+
+generateBoard :: (Int -> Int -> Maybe Piece) -> Board
+generateBoard gen = Board $ (\y -> (\x -> gen x y) <$> [0..(boardWidth - 1)]) <$> [0..(boardHeight - 1)]
+
+transpose :: Board -> Board
+transpose b = generateBoard $ \x y -> pieceAt y x b
 
 pieceColor :: Piece -> Color
 pieceColor (Piece 2)  = white
