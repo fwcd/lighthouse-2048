@@ -89,6 +89,16 @@ rotL = flipV . transpose
 rotR :: Board -> Board
 rotR = flipH . transpose
 
+-- | Pads the text to the given length with spaces.
+padLeft :: Int -> T.Text -> T.Text
+padLeft n xs = T.replicate (n - T.length xs) " " <> xs
+
+-- | Prettyprints the board.
+prettyBoard :: Board -> T.Text
+prettyBoard (Board rs) = T.unlines $ prettyRow <$> rs
+  where prettyRow = T.concat . (prettyTile <$>)
+        prettyTile = padLeft 5 . T.pack . show
+
 -- | Shifts and merges tiles in the given direction.
 shiftAndMerge :: Dir -> Board -> Board
 shiftAndMerge dir = case dir of
