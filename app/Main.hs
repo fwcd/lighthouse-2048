@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Monad (guard, void)
+import Control.Monad (guard, void, join)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT (..), runMaybeT)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as T
 import Lighthouse.Connection
 import Lighthouse.Display
@@ -16,9 +16,14 @@ import System.Environment (getEnv)
 
 -- TODO: Use Data.Vector for efficient random access?
 
-newtype Tile = Tile Int
-newtype Board = Board [[Maybe Tile]]
+newtype Tile = Tile { tileValue :: Int }
+  deriving (Show, Eq)
+
+newtype Board = Board { boardRows :: [[Maybe Tile]] }
+  deriving (Show, Eq)
+
 data Dir = DirLeft | DirRight | DirUp | DirDown
+  deriving (Show, Eq)
 
 -- | The (constant) board width.
 boardWidth :: Int
@@ -66,12 +71,16 @@ step dir = case dir of
     DirRight -> stepRight
     DirUp    -> rotR . stepLeft . rotL
     DirDown  -> rotR . stepRight . rotL
-  -- TODO: Merge tiles
+
   where stepLeft (Board rs) = Board $ updateRow [] <$> rs
         stepRight           = flipH . stepLeft . flipH
-        updateRow acc []             = acc
-        updateRow acc (Nothing : ps) = updateRow (Nothing : acc) ps
-        updateRow acc (Just p : ps)  = Just p : updateRow acc ps
+
+        -- Update row by merging adjacent equal tiles and shifting the tiles to the left
+        updateRow acc ts = case ts of
+          []                               -> acc
+          Just t : Just t' : ts' | t == t' -> Just (Tile (2 * tileValue t)) : updateRow (Nothing : acc) ts'
+          Just t : ts'                     -> Just t : updateRow acc ts'
+          Nothing : ts'                    -> updateRow (Nothing : acc) ts'
 
 tileColor :: Tile -> Color
 tileColor (Tile 2)  = white
