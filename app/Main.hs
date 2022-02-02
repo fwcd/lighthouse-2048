@@ -16,8 +16,8 @@ import System.Environment (getEnv)
 
 -- TODO: Use Data.Vector for efficient random access?
 
-newtype Piece = Piece Int
-newtype Board = Board [[Maybe Piece]]
+newtype Tile = Tile Int
+newtype Board = Board [[Maybe Tile]]
 data Dir = DirLeft | DirRight | DirUp | DirDown
 
 -- | The (constant) board width.
@@ -28,19 +28,19 @@ boardWidth = 4
 boardHeight :: Int
 boardHeight = 4
 
--- | Fetches the piece at the given position.
-pieceAt :: Int -> Int -> Board -> Maybe Piece
-pieceAt x y (Board rs)
+-- | Fetches the tile at the given position.
+tileAt :: Int -> Int -> Board -> Maybe Tile
+tileAt x y (Board rs)
   | x >= 0 && x < boardWidth && y >= 0 && y < boardHeight = ((rs !! y) !! x)
   | otherwise                                             = Nothing
 
--- | Generates a board from a function that maps positions to pieces.
-generateBoard :: (Int -> Int -> Maybe Piece) -> Board
+-- | Generates a board from a function that maps positions to tiles.
+generateBoard :: (Int -> Int -> Maybe Tile) -> Board
 generateBoard gen = Board $ (\y -> (\x -> gen x y) <$> [0..(boardWidth - 1)]) <$> [0..(boardHeight - 1)]
 
 -- | Transposes the board.
 transposeBoard :: Board -> Board
-transposeBoard b = generateBoard $ \x y -> pieceAt y x b
+transposeBoard b = generateBoard $ \x y -> tileAt y x b
 
 -- | Flips the board vertically.
 flipBoard :: Board -> Board
@@ -53,27 +53,27 @@ step dir (Board rs) = Board $ updateRow [] <$> rs
         updateRow acc (Nothing : ps) = updateRow (Nothing : acc) ps
         updateRow acc (Just p : ps)  = Just p : updateRow acc ps
 
-pieceColor :: Piece -> Color
-pieceColor (Piece 2)  = white
-pieceColor (Piece 4)  = Color 255 231 150 -- light yellow
-pieceColor (Piece 8)  = Color 255 144 25  -- orange
-pieceColor (Piece 16) = Color 189 88 0    -- darker orange
-pieceColor (Piece 32) = Color 255 88 66   -- light red
-pieceColor (Piece 64) = Color 171 20 0    -- dark red
-pieceColor (Piece _)  = yellow
+tileColor :: Tile -> Color
+tileColor (Tile 2)  = white
+tileColor (Tile 4)  = Color 255 231 150 -- light yellow
+tileColor (Tile 8)  = Color 255 144 25  -- orange
+tileColor (Tile 16) = Color 189 88 0    -- darker orange
+tileColor (Tile 32) = Color 255 88 66   -- light red
+tileColor (Tile 64) = Color 171 20 0    -- dark red
+tileColor (Tile _)  = yellow
 
 sampleBoard :: Board
 sampleBoard = Board
-  [ [Nothing, Nothing, Nothing, Just (Piece 2)]
-  , [Just (Piece 2), Just (Piece 4), Nothing, Just (Piece 2)]
-  , [Nothing, Just (Piece 8), Just (Piece 16), Just (Piece 16)]
-  , [Nothing, Nothing, Nothing, Just (Piece 2)]
-  , [Nothing, Nothing, Nothing, Just (Piece 64)]
+  [ [Nothing, Nothing, Nothing, Just (Tile 2)]
+  , [Just (Tile 2), Just (Tile 4), Nothing, Just (Tile 2)]
+  , [Nothing, Just (Tile 8), Just (Tile 16), Just (Tile 16)]
+  , [Nothing, Nothing, Nothing, Just (Tile 2)]
+  , [Nothing, Nothing, Nothing, Just (Tile 64)]
   ]
 
 boardToDisplay :: Board -> Display
 boardToDisplay b = generateDisplay pixAt
-  where pixAt x y = maybe black pieceColor $ pieceAt ((x - 4) `div` 5) ((y - 1) `div` 3) b
+  where pixAt x y = maybe black tileColor $ tileAt ((x - 4) `div` 5) ((y - 1) `div` 3) b
 
 app :: Listener Board
 app = mempty
