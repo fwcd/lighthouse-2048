@@ -1,5 +1,7 @@
 # Project Lighthouse 2048
 
+[![Build](https://github.com/fwcd/lighthouse-2048/actions/workflows/build.yml/badge.svg)](https://github.com/fwcd/lighthouse-2048/actions/workflows/build.yml)
+
 A Project Lighthouse implementation of the game 2048.
 
 ## Running
