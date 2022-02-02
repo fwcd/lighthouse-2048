@@ -10,8 +10,21 @@ import Lighthouse.Utils.Color
 import Lighthouse.Utils.Logging
 import System.Environment (getEnv)
 
+-- TODO: Use Data.Vector for efficient random access?
+
 newtype Piece = Piece Int
 data Board = Board [[Maybe Piece]]
+
+boardWidth :: Int
+boardWidth = 4
+
+boardHeight :: Int
+boardHeight = 4
+
+pieceAt :: Int -> Int -> Board -> Maybe Piece
+pieceAt x y (Board b)
+  | x >= 0 && x < boardWidth && y >= 0 && y < boardHeight = ((b !! y) !! x)
+  | otherwise                                             = Nothing
 
 pieceColor :: Piece -> Color
 pieceColor (Piece 2)  = white
@@ -32,9 +45,8 @@ sampleBoard = Board
   ]
 
 boardToDisplay :: Board -> Display
-boardToDisplay (Board b) = generateDisplay pixAt
-  where pixAt x y | x < 4 && y < 4 = maybe black pieceColor $ (b !! y) !! x
-                  | otherwise      = black
+boardToDisplay b = generateDisplay pixAt
+  where pixAt x y = maybe black pieceColor $ pieceAt ((x - 4) `div` 5) ((y - 1) `div` 3) b
 
 app :: Listener ()
 app = mempty
