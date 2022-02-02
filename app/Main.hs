@@ -1,23 +1,55 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Lighthouse.Connection
-import Lighthouse.Options
-import Lighthouse.Utils.Logging
+import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
+import Lighthouse.Connection
+import Lighthouse.Display
+import Lighthouse.Options
+import Lighthouse.Utils.Color
+import Lighthouse.Utils.Logging
 import System.Environment (getEnv)
 
-app :: Listener
+newtype Piece = Piece Int
+data Board = Board [[Maybe Piece]]
+
+pieceColor :: Piece -> Color
+pieceColor (Piece 2)  = white
+pieceColor (Piece 4)  = Color 255 231 150 -- light yellow
+pieceColor (Piece 8)  = Color 255 144 25  -- orange
+pieceColor (Piece 16) = Color 189 88 0    -- darker orange
+pieceColor (Piece 32) = Color 255 88 66   -- light red
+pieceColor (Piece 64) = Color 171 20 0    -- dark red
+pieceColor (Piece _)  = yellow
+
+sampleBoard :: Board
+sampleBoard = Board
+  [ [Nothing, Nothing, Nothing, Just (Piece 2)]
+  , [Just (Piece 2), Just (Piece 4), Nothing, Just (Piece 2)]
+  , [Nothing, Just (Piece 8), Just (Piece 16), Just (Piece 16)]
+  , [Nothing, Nothing, Nothing, Just (Piece 2)]
+  , [Nothing, Nothing, Nothing, Just (Piece 64)]
+  ]
+
+boardToDisplay :: Board -> Display
+boardToDisplay (Board b) = generateDisplay pixAt
+  where pixAt x y | x < 4 && y < 4 = maybe black pieceColor $ (b !! y) !! x
+                  | otherwise      = black
+
+app :: Listener ()
 app = mempty
   { onConnect = do
       logInfo "app" "Connected!"
+      sendDisplay $ boardToDisplay sampleBoard
   }
 
 main :: IO ()
 main = do
   username <- T.pack <$> getEnv "LIGHTHOUSE_USERNAME"
   token    <- T.pack <$> getEnv "LIGHTHOUSE_TOKEN"
-  let auth  = Authentication { authUsername = username, authToken = token }
-      opts  = Options { optAuthentication = auth, optLogHandler = simpleLogHandler infoLevel }
+  let opts  = Options { optAuthentication = Authentication { authUsername = username, authToken = token }
+                      , optLogHandler = simpleLogHandler infoLevel
+                      , optInitialState = ()
+                      }
 
   runLighthouseApp app opts
