@@ -96,8 +96,8 @@ padLeft n xs = T.replicate (n - T.length xs) " " <> xs
 -- | Prettyprints the board.
 prettyBoard :: Board -> T.Text
 prettyBoard (Board rs) = T.unlines $ prettyRow <$> rs
-  where prettyRow = T.concat . (prettyTile <$>)
-        prettyTile = padLeft 5 . T.pack . show
+  where prettyRow = T.intercalate "|" . (prettyTile <$>)
+        prettyTile = padLeft 5 . T.pack . maybe "" (show . tileValue)
 
 -- | Shifts and merges tiles in the given direction.
 shiftAndMerge :: Dir -> Board -> Board
@@ -159,7 +159,7 @@ updateBoard f = void $ runMaybeT $ do
   b <- lift getUserState
   b' <- MaybeT $ f b
   lift $ do
-    logInfo "updateBoard" $ prettyBoard b'
+    logInfo "updateBoard" $ "\n" <> prettyBoard b'
     putUserState b'
     sendDisplay $ boardToDisplay b'
 
