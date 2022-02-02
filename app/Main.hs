@@ -5,7 +5,7 @@ import Control.Monad (guard, void, join)
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT (..), runMaybeT)
-import Data.Maybe (fromMaybe, isNothing)
+import Data.Maybe (fromMaybe, isNothing, maybeToList)
 import qualified Data.Text as T
 import Lighthouse.Connection
 import Lighthouse.Display
@@ -107,15 +107,17 @@ shiftAndMerge dir = case dir of
     DirUp    -> rotR . stepLeft . rotL
     DirDown  -> rotR . stepRight . rotL
 
-  where stepLeft (Board rs) = Board $ updateRow [] <$> rs
+  where stepLeft (Board rs) = Board $ updateRow Nothing [] <$> rs
         stepRight           = flipH . stepLeft . flipH
 
-        -- Update row by merging adjacent equal tiles and shifting the tiles to the left
-        updateRow acc ts = case ts of
-          []                               -> acc
-          Just t : Just t' : ts' | t == t' -> Just (Tile (2 * tileValue t)) : updateRow (Nothing : acc) ts'
-          Just t : ts'                     -> Just t : updateRow acc ts'
-          Nothing : ts'                    -> updateRow (Nothing : acc) ts'
+        -- Update row by merging equal tiles and shifting the tiles to the left
+        -- We do so by traversing the row, tracking the last element (for merging)
+        -- and a stack of Nothings to append at the end (accumulator-style).
+        updateRow last acc ts = case ts of
+          []                               -> (Just <$> maybeToList last) ++ acc
+          Just t : ts' | Just t == last    -> Just (Tile (2 * tileValue t)) : updateRow Nothing (Nothing : acc) ts'
+                       | otherwise         -> (Just <$> maybeToList last) ++ updateRow (Just t) acc ts'
+          Nothing : ts'                    -> updateRow last (Nothing : acc) ts'
 
 -- | Randomly chooses a value from the given list (assuming it is non-empty).
 chooseRandom :: MonadIO m => [a] -> m a
