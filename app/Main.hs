@@ -122,8 +122,11 @@ spawnTile b = do
   return $ putTileAt p (Just t) b
 
 -- | Performs a game step in the given direction.
-step :: MonadIO m => Dir -> Board -> m Board
-step dir = spawnTile . shiftAndMerge dir
+step :: MonadIO m => Dir -> Board -> m (Maybe Board)
+step dir b = runMaybeT $ do
+  let b' = shiftAndMerge dir b
+  guard (b /= b')
+  spawnTile b'
 
 -- | Maps a tile to a color for the lighthouse.
 tileColor :: Tile -> Color
@@ -168,9 +171,9 @@ app = mempty
         _           -> Nothing
 
       -- Update board and send it
+      b  <- lift getUserState
+      b' <- MaybeT $ step dir b
       lift $ do
-        b  <- getUserState
-        b' <- step dir b
         putUserState b'
         sendDisplay $ boardToDisplay b'
   }
