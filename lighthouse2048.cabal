@@ -33,6 +33,7 @@ executable lighthouse2048
       base >=4.7 && <5
     , lighthouse-client
     , mtl ==2.2.*
+    , random ==1.2.*
     , text ==1.2.*
     , transformers ==0.5.*
   default-language: Haskell2010
