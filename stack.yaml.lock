@@ -9,14 +9,14 @@ packages:
     name: lighthouse-client
     subdir: lighthouse-client
     pantry-tree:
-      sha256: d6d60c993f99d8679e78ff81ecd1e182d8395ada64c7ca2bf584b7deb8ecc6d5
+      sha256: dd19933232e2dc7094b71e90229acc0aee6c81d61879a5fd7075db5f102a2d35
       size: 969
-    commit: d418d63e1325c546661fc6f09dc5c08ad6d62cf0
+    commit: 426db85df0fe0aecd38982aa87eb23688a90ca85
     version: 0.1.0.0
   original:
     git: https://github.com/fwcd/lighthouse-haskell.git
     subdir: lighthouse-client
-    commit: d418d63e1325c546661fc6f09dc5c08ad6d62cf0
+    commit: 426db85df0fe0aecd38982aa87eb23688a90ca85
 - completed:
     hackage: random-1.2.1@sha256:8bee24dc0c985a90ee78d94c61f8aed21c49633686f0f1c14c5078d818ee43a2,6598
     pantry-tree:

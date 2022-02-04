@@ -5,7 +5,7 @@ packages:
 
 extra-deps:
 - git: https://github.com/fwcd/lighthouse-haskell.git
-  commit: d418d63e1325c546661fc6f09dc5c08ad6d62cf0
+  commit: 426db85df0fe0aecd38982aa87eb23688a90ca85
   subdirs:
   - lighthouse-client
 - random-1.2.1

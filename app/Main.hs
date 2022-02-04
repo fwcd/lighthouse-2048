@@ -198,9 +198,7 @@ main :: IO ()
 main = do
   username <- T.pack <$> getEnv "LIGHTHOUSE_USERNAME"
   token    <- T.pack <$> getEnv "LIGHTHOUSE_TOKEN"
-  let opts  = Options { optAuthentication = Authentication { authUsername = username, authToken = token }
-                      , optLogHandler = simpleLogHandler infoLevel
-                      , optInitialState = emptyBoard
-                      }
+  let auth = Authentication { authUsername = username, authToken = token }
+      opts = (defaultOptions auth emptyBoard) { optLogHandler = simpleLogHandler infoLevel }
 
   runLighthouseApp app opts
