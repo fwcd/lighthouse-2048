@@ -9,7 +9,7 @@ A Project Lighthouse implementation of the game [2048](https://en.wikipedia.org/
 First set the following environment variables
 
 ```bash
-export LIGHTHOUSE_USERNAME=[your username]
+export LIGHTHOUSE_USER=[your username]
 export LIGHTHOUSE_TOKEN=[your API token]
 ```
 
