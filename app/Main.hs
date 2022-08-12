@@ -196,7 +196,7 @@ app = mempty
 -- | The main function.
 main :: IO ()
 main = do
-  username <- T.pack <$> getEnv "LIGHTHOUSE_USERNAME"
+  username <- T.pack <$> getEnv "LIGHTHOUSE_USER"
   token    <- T.pack <$> getEnv "LIGHTHOUSE_TOKEN"
   let auth = Authentication { authUsername = username, authToken = token }
       opts = (defaultOptions auth emptyBoard) { optLogHandler = simpleLogHandler infoLevel }
