@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           lighthouse2048
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/lighthouse2048#readme>
+description:    Please see the README on GitHub at <https://github.com/fwcd/lighthouse-2048#readme>
 homepage:       https://github.com/fwcd/lighthouse-2048#readme
 bug-reports:    https://github.com/fwcd/lighthouse-2048/issues
 author:         fwcd
