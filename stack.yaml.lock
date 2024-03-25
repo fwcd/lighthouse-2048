@@ -5,25 +5,18 @@
 
 packages:
 - completed:
+    commit: 925956ec6b3a2e8be510a3c07059d27c9fa10506
     git: https://github.com/fwcd/lighthouse-haskell.git
     name: lighthouse-client
-    subdir: lighthouse-client
     pantry-tree:
-      sha256: dd19933232e2dc7094b71e90229acc0aee6c81d61879a5fd7075db5f102a2d35
+      sha256: 2ec82648916dea1f0f02209a92744df6d6bb7275473588a5460f2c6c5572279e
       size: 969
-    commit: 426db85df0fe0aecd38982aa87eb23688a90ca85
-    version: 0.1.0.0
+    subdir: lighthouse-client
+    version: 0.2.0.0
   original:
+    commit: 925956ec6b3a2e8be510a3c07059d27c9fa10506
     git: https://github.com/fwcd/lighthouse-haskell.git
     subdir: lighthouse-client
-    commit: 426db85df0fe0aecd38982aa87eb23688a90ca85
-- completed:
-    hackage: random-1.2.1@sha256:8bee24dc0c985a90ee78d94c61f8aed21c49633686f0f1c14c5078d818ee43a2,6598
-    pantry-tree:
-      sha256: 8bdc994ce41f43624ab42302a881fe5a0f81d965f5d238841e24943664681a06
-      size: 1528
-  original:
-    hackage: random-1.2.1
 - completed:
     hackage: msgpack-1.0.1.0@sha256:a87b663fc28d661b41552331d22e10b34028cad8a592ae758ac47e363933b6bd,3004
     pantry-tree:
@@ -33,7 +26,7 @@ packages:
     hackage: msgpack-1.0.1.0
 snapshots:
 - completed:
-    sha256: 7f69bb29a57495586e7e3ed31ecc59c0d2c959cb23bd52b71ca676f254c9beb1
-    size: 587819
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/23.yaml
-  original: lts-18.23
+    sha256: 6f0bea3ba5b07360f25bc886e8cff8d847767557a492a6f7f6dcb06e3cc79ee9
+    size: 712905
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/13.yaml
+  original: lts-22.13

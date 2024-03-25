@@ -1,12 +1,15 @@
-resolver: lts-18.23
+resolver: lts-22.13
 
 packages:
 - .
 
 extra-deps:
 - git: https://github.com/fwcd/lighthouse-haskell.git
-  commit: 426db85df0fe0aecd38982aa87eb23688a90ca85
+  commit: 925956ec6b3a2e8be510a3c07059d27c9fa10506
   subdirs:
   - lighthouse-client
-- random-1.2.1
 - msgpack-1.0.1.0
+
+# Unfortunately, msgpack still has outdated upper bounds,
+# so we will have to ignore those constraints.
+allow-newer: true
